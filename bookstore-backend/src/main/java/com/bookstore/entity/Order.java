@@ -44,6 +44,9 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItem> orderItems;
 
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private CancelRequest cancelRequest;
+
     public enum OrderStatus {
         PENDING, PAID, SHIPPED, DELIVERED, CANCELLED
     }

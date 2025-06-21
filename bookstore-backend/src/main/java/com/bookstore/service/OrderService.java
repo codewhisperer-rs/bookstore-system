@@ -1,13 +1,16 @@
 package com.bookstore.service;
 
+import com.bookstore.dto.CancelRequestResponse;
 import com.bookstore.dto.OrderItemResponse;
 import com.bookstore.dto.OrderRequest;
 import com.bookstore.dto.OrderResponse;
 import com.bookstore.entity.Book;
+import com.bookstore.entity.CancelRequest;
 import com.bookstore.entity.Order;
 import com.bookstore.entity.OrderItem;
 import com.bookstore.entity.User;
 import com.bookstore.repository.BookRepository;
+import com.bookstore.repository.CancelRequestRepository;
 import com.bookstore.repository.OrderRepository;
 import com.bookstore.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,6 +34,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
+    private final CancelRequestRepository cancelRequestRepository;
 
     @Transactional
     public OrderResponse createOrder(OrderRequest request, String username) {
@@ -126,6 +131,20 @@ public class OrderService {
                 .map(this::convertItemToResponse)
                 .collect(Collectors.toList());
 
+        CancelRequestResponse cancelRequestResponse = null;
+        if (order.getCancelRequest() != null) {
+            CancelRequest cr = order.getCancelRequest();
+            cancelRequestResponse = new CancelRequestResponse(
+                    cr.getId(),
+                    order.getId(),
+                    cr.getReason(),
+                    cr.getStatus().name(),
+                    cr.getAdminNote(),
+                    cr.getCreatedAt(),
+                    cr.getProcessedAt()
+            );
+        }
+
         return new OrderResponse(
                 order.getId(),
                 order.getUser().getId(),
@@ -133,7 +152,8 @@ public class OrderService {
                 order.getTotalPrice(),
                 order.getStatus().name(),
                 order.getCreatedAt(),
-                itemResponses
+                itemResponses,
+                cancelRequestResponse
         );
     }
 
@@ -148,5 +168,96 @@ public class OrderService {
                 item.getPrice(),
                 subtotal
         );
+    }
+
+    // Cancel order methods
+    @Transactional
+    public OrderResponse cancelOrder(Long orderId, String username) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // Check if user owns this order
+        if (!order.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        // Only allow cancellation for PENDING and PAID orders
+        if (order.getStatus() != Order.OrderStatus.PENDING && order.getStatus() != Order.OrderStatus.PAID) {
+            throw new RuntimeException("Cannot cancel order with status: " + order.getStatus());
+        }
+
+        // Restore book stock
+        for (OrderItem item : order.getOrderItems()) {
+            Book book = item.getBook();
+            book.setStock(book.getStock() + item.getQuantity());
+            bookRepository.save(book);
+        }
+
+        order.setStatus(Order.OrderStatus.CANCELLED);
+        Order savedOrder = orderRepository.save(order);
+        return convertToResponse(savedOrder);
+    }
+
+    @Transactional
+    public void requestCancelOrder(Long orderId, String reason, String username) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // Check if user owns this order
+        if (!order.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        // Only allow cancel request for SHIPPED orders
+        if (order.getStatus() != Order.OrderStatus.SHIPPED) {
+            throw new RuntimeException("Can only request cancellation for shipped orders");
+        }
+
+        // Check if cancel request already exists
+        if (order.getCancelRequest() != null) {
+            throw new RuntimeException("Cancel request already exists for this order");
+        }
+
+        CancelRequest cancelRequest = new CancelRequest();
+        cancelRequest.setOrder(order);
+        cancelRequest.setReason(reason);
+        cancelRequest.setStatus(CancelRequest.CancelRequestStatus.PENDING);
+
+        cancelRequestRepository.save(cancelRequest);
+    }
+
+    public Page<CancelRequest> getPendingCancelRequests(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return cancelRequestRepository.findPendingRequests(pageable);
+    }
+
+    @Transactional
+    public void handleCancelRequest(Long orderId, boolean approved, String adminNote) {
+        CancelRequest cancelRequest = cancelRequestRepository.findByOrderId(orderId);
+        if (cancelRequest == null) {
+            throw new RuntimeException("Cancel request not found for order: " + orderId);
+        }
+
+        if (cancelRequest.getStatus() != CancelRequest.CancelRequestStatus.PENDING) {
+            throw new RuntimeException("Cancel request is not pending");
+        }
+
+        cancelRequest.setStatus(approved ? CancelRequest.CancelRequestStatus.APPROVED : CancelRequest.CancelRequestStatus.REJECTED);
+        cancelRequest.setAdminNote(adminNote);
+        cancelRequest.setProcessedAt(LocalDateTime.now());
+
+        if (approved) {
+            Order order = cancelRequest.getOrder();
+            // Restore book stock
+            for (OrderItem item : order.getOrderItems()) {
+                Book book = item.getBook();
+                book.setStock(book.getStock() + item.getQuantity());
+                bookRepository.save(book);
+            }
+            order.setStatus(Order.OrderStatus.CANCELLED);
+            orderRepository.save(order);
+        }
+
+        cancelRequestRepository.save(cancelRequest);
     }
 }

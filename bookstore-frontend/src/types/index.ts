@@ -36,6 +36,17 @@ export interface Order {
   status: 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
   createdAt: string;
   orderItems: OrderItem[];
+  cancelRequest?: CancelRequest;
+}
+
+export interface CancelRequest {
+  id: number;
+  orderId: number;
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  adminNote?: string;
+  createdAt: string;
+  processedAt?: string;
 }
 
 export interface AuthResponse {

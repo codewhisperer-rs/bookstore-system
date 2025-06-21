@@ -12,7 +12,7 @@ import {
   App as AntdApp,
   Spin
 } from 'antd';
-import { SearchOutlined, ShoppingCartOutlined, FireOutlined, BookOutlined, EditOutlined } from '@ant-design/icons';
+import { SearchOutlined, ShoppingCartOutlined, FireOutlined, BookOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { bookAPI } from '../services/api';
 import { useCartStore } from '../store/cartStore';
@@ -31,11 +31,9 @@ const Home: React.FC = () => {
   const [pageSize, setPageSize] = useState(12);
   const [sortBy, setSortBy] = useState('id');
   const [sortDir, setSortDir] = useState('asc');
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [editingBook, setEditingBook] = useState<Book | null>(null);
 
   const { addToCart } = useCartStore();
-  const { isAuthenticated, user, hideRegister } = useAuthStore(); // Get hideRegister state
+  const { isAuthenticated, hideRegister } = useAuthStore(); // Get hideRegister state
   const navigate = useNavigate();
 
   const fetchBooks = async () => {
@@ -86,27 +84,7 @@ const Home: React.FC = () => {
     if (size) setPageSize(size);
   };
 
-  const handleEdit = (book: Book) => {
-    setEditingBook(book);
-    setIsEditModalVisible(true);
-  };
 
-  const handleCancelEdit = () => {
-    setIsEditModalVisible(false);
-    setEditingBook(null);
-  };
-
-  const handleUpdateBook = async (values: any) => {
-    if (!editingBook) return;
-    try {
-      await bookAPI.updateBook(editingBook.id, values);
-      message.success('图书信息更新成功');
-      setIsEditModalVisible(false);
-      fetchBooks(); // Refresh the book list
-    } catch (error) {
-      message.error('更新图书信息失败');
-    }
-  };
 
   return (
     <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', minHeight: '100vh' }}>

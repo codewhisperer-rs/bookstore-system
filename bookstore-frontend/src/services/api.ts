@@ -78,6 +78,22 @@ export const orderAPI = {
 
   updateOrderStatus: (id: number, status: string) =>
     api.put(`/orders/admin/${id}/status?status=${status}`).then(res => res.data),
+
+  // 用户取消订单
+  cancelOrder: (id: number) =>
+    api.put(`/orders/${id}/cancel`).then(res => res.data),
+
+  // 申请取消已发货订单
+  requestCancelOrder: (id: number, reason: string) =>
+    api.post(`/orders/${id}/cancel-request`, { reason }).then(res => res.data),
+
+  // 管理员处理取消申请
+  handleCancelRequest: (id: number, approved: boolean, adminNote?: string) =>
+    api.put(`/orders/admin/${id}/cancel-request`, { approved, adminNote }).then(res => res.data),
+
+  // 获取待处理的取消申请
+  getPendingCancelRequests: (page = 0, size = 10) =>
+    api.get(`/orders/admin/cancel-requests?page=${page}&size=${size}`).then(res => res.data),
 };
 
 export const cartAPI = {
