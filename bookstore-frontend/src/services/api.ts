@@ -1,10 +1,12 @@
 import axios from 'axios';
+import { message } from 'antd';
 import { AuthResponse, LoginRequest, RegisterRequest } from '../types';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -111,6 +113,9 @@ export const userAPI = {
 
   updateUserRole: (id: number, role: string) =>
     api.put(`/admin/users/${id}/role?role=${role}`).then(res => res.data),
+
+  deleteUser: (id: number) =>
+    api.delete(`/admin/users/${id}`),
 };
 
 export default api;

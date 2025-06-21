@@ -11,7 +11,7 @@ import {
   Input,
   Popconfirm
 } from 'antd';
-import { SearchOutlined, UserOutlined } from '@ant-design/icons';
+import { SearchOutlined, UserOutlined, DeleteOutlined } from '@ant-design/icons';
 import { userAPI } from '../../services/api';
 import { User, PageResponse } from '../../types';
 
@@ -74,6 +74,16 @@ const AdminUsers: React.FC = () => {
       fetchUsers();
     } catch (error) {
       message.error('角色更新失败');
+    }
+  };
+
+  const handleDeleteUser = async (userId: number, username: string) => {
+    try {
+      await userAPI.deleteUser(userId);
+      message.success(`用户 ${username} 已删除`);
+      fetchUsers();
+    } catch (error) {
+      message.error('删除用户失败');
     }
   };
 
@@ -145,6 +155,32 @@ const AdminUsers: React.FC = () => {
       key: 'createdAt',
       render: (date: string) => new Date(date).toLocaleString(),
       sorter: true,
+    },
+    {
+      title: '操作',
+      key: 'action',
+      width: 120,
+      render: (_, record: User) => (
+        <Space>
+          <Popconfirm
+            title="删除用户"
+            description={`确定要删除用户 "${record.username}" 吗？此操作不可恢复！`}
+            onConfirm={() => handleDeleteUser(record.id, record.username)}
+            okText="确定删除"
+            cancelText="取消"
+            okType="danger"
+          >
+            <Button 
+              type="text" 
+              danger 
+              icon={<DeleteOutlined />}
+              size="small"
+            >
+              删除
+            </Button>
+          </Popconfirm>
+        </Space>
+      ),
     },
   ];
 

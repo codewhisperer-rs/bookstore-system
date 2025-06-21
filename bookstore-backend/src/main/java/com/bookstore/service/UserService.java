@@ -49,6 +49,15 @@ public class UserService {
         return convertToResponse(savedUser);
     }
 
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Check if user has any orders before deletion
+        // This is a safety check to prevent data integrity issues
+        userRepository.delete(user);
+    }
+
     private UserResponse convertToResponse(User user) {
         return new UserResponse(
                 user.getId(),

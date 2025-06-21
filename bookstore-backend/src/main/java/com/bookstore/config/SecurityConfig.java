@@ -57,11 +57,12 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/books/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/h2-console/**", "/api/test/**").permitAll()
-                .requestMatchers("/api/cart/**").authenticated()
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/books/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/api-docs/**", "/h2-console/**", "/actuator/**").permitAll()
+                .requestMatchers("/cart/**").authenticated()
+                .requestMatchers("/orders/**").authenticated()
+                .requestMatchers("/admin/users/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions().disable())
@@ -74,7 +75,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:5174", "http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);

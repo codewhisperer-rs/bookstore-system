@@ -9,7 +9,7 @@ import {
   Select, 
   Space, 
   Typography,
-  message,
+  App as AntdApp,
   Spin,
   Carousel,
   Tabs,
@@ -36,6 +36,7 @@ const mockBooks: Book[] = [
 ];
 
 const Home: React.FC = () => {
+  const { message } = AntdApp.useApp();
   const [books, setBooks] = useState<PageResponse<Book> | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
