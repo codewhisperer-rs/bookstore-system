@@ -1,8 +1,10 @@
 package com.bookstore.config;
 
 import com.bookstore.entity.Book;
+import com.bookstore.entity.Cart;
 import com.bookstore.entity.User;
 import com.bookstore.repository.BookRepository;
+import com.bookstore.repository.CartRepository;
 import com.bookstore.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -19,6 +21,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
+    private final CartRepository cartRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -106,7 +109,13 @@ public class DataInitializer implements CommandLineRunner {
         admin.setPassword(passwordEncoder.encode("admin123"));
         admin.setEmail("admin@bookstore.com");
         admin.setRole(User.Role.ADMIN);
-        userRepository.save(admin);
+        User savedAdmin = userRepository.save(admin);
+        
+        // Create cart for admin user
+        Cart adminCart = new Cart();
+        adminCart.setUser(savedAdmin);
+        cartRepository.save(adminCart);
+        
         System.out.println("初始化管理员账户: admin/admin123");
     }
 }

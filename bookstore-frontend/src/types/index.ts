@@ -76,6 +76,7 @@ export interface OrderRequest {
 }
 
 export interface CartItem {
+  bookId: number;
   book: Book;
   quantity: number;
 }

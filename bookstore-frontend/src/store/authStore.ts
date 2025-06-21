@@ -6,18 +6,20 @@ interface AuthState {
   user: AuthResponse | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  hideRegister: boolean; // Add this line
+  isInitialized: boolean;
+  hideRegister: boolean;
   login: (data: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
-  logout: () => void;
-  initializeAuth: () => void;
+  logout: () => Promise<void>;
+  initializeAuth: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
-  hideRegister: false, // Add this line
+  isInitialized: false,
+  hideRegister: false,
 
   login: async (data: LoginRequest) => {
     set({ isLoading: true });
@@ -61,7 +63,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  logout: () => {
+  logout: async () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     set({ 
@@ -69,6 +71,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       isAuthenticated: false, 
       hideRegister: false 
     });
+    // Clear cart data when user logs out
+    const { useCartStore } = await import('./cartStore');
+    useCartStore.getState().clearCartData();
   },
 
   initializeAuth: async () => {
@@ -81,6 +86,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ 
           user, 
           isAuthenticated: true, 
+          isInitialized: true,
           hideRegister: true 
         });
         // Fetch cart data when initializing auth
@@ -89,7 +95,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       } catch (error) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        set({ isInitialized: true });
       }
+    } else {
+      set({ isInitialized: true });
     }
   },
 }));

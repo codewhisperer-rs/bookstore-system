@@ -9,6 +9,7 @@ interface CartState {
   updateQuantity: (bookId: number, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
   fetchCart: () => Promise<void>;
+  clearCartData: () => void;
   getTotalPrice: () => number;
   getTotalItems: () => number;
 }
@@ -18,8 +19,8 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   fetchCart: async () => {
     try {
-      const items = await cartAPI.getCart();
-      set({ items });
+      const cartData = await cartAPI.getCart();
+      set({ items: cartData.items || [] });
     } catch (error) {
       console.error('Failed to fetch cart:', error);
     }
@@ -64,6 +65,10 @@ export const useCartStore = create<CartState>((set, get) => ({
     } catch (error) {
       console.error('Failed to clear cart:', error);
     }
+  },
+
+  clearCartData: () => {
+    set({ items: [] });
   },
 
   getTotalPrice: () => {

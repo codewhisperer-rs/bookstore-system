@@ -13,10 +13,9 @@ import {
   Spin,
   Carousel,
   Tabs,
-  Tag,
-  Rate
+  Tag
 } from 'antd';
-import { SearchOutlined, ShoppingCartOutlined, FireOutlined, StarOutlined, BookOutlined } from '@ant-design/icons';
+import { SearchOutlined, ShoppingCartOutlined, FireOutlined, BookOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { bookAPI } from '../services/api';
 import { useCartStore } from '../store/cartStore';
@@ -29,11 +28,11 @@ const { Option } = Select;
 const { TabPane } = Tabs;
 
 // Mock data for featured books
-const mockBooks = [
-  { id: 1, title: 'JavaScript高级程序设计', author: 'Nicholas C. Zakas', price: 89.00, rating: 5 },
-  { id: 2, title: 'Vue.js实战', author: '梁灏', price: 69.00, rating: 4 },
-  { id: 3, title: 'React进阶之路', author: '徐超', price: 79.00, rating: 5 },
-  { id: 4, title: 'Node.js开发指南', author: '郭家宝', price: 59.00, rating: 4 }
+const mockBooks: Book[] = [
+  { id: 1, title: 'JavaScript高级程序设计', author: 'Nicholas C. Zakas', price: 89.00, stock: 10, createdAt: '2024-01-01T00:00:00Z' },
+  { id: 2, title: 'Vue.js实战', author: '梁灏', price: 69.00, stock: 15, createdAt: '2024-01-02T00:00:00Z' },
+  { id: 3, title: 'React进阶之路', author: '徐超', price: 79.00, stock: 8, createdAt: '2024-01-03T00:00:00Z' },
+  { id: 4, title: 'Node.js开发指南', author: '郭家宝', price: 59.00, stock: 12, createdAt: '2024-01-04T00:00:00Z' }
 ];
 
 const Home: React.FC = () => {
@@ -374,7 +373,7 @@ const Home: React.FC = () => {
       <div style={{ background: 'white', padding: '60px 24px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <Title level={2} style={{ textAlign: 'center', marginBottom: '50px', fontSize: '2.5rem' }}>
-            <StarOutlined /> 精选图书
+            精选图书
           </Title>
           <Row gutter={[24, 24]}>
             {mockBooks.map((book) => (
@@ -415,13 +414,15 @@ const Home: React.FC = () => {
                     <Button 
                       type="primary" 
                       icon={<ShoppingCartOutlined />}
+                      onClick={() => handleAddToCart(book)}
+                      disabled={book.stock <= 0}
                       style={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        background: book.stock <= 0 ? '#d9d9d9' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                         border: 'none',
                         borderRadius: '8px'
                       }}
                     >
-                      加入购物车
+                      {book.stock <= 0 ? '缺货' : '加入购物车'}
                     </Button>
                   ]}
                 >
@@ -435,11 +436,7 @@ const Home: React.FC = () => {
                           <Text strong style={{ color: '#ff4d4f', fontSize: '20px' }}>¥{book.price}</Text>
                           <Text delete style={{ marginLeft: '8px', color: '#999' }}>¥{(book.price * 1.3).toFixed(2)}</Text>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <div>
-                            <Rate disabled defaultValue={book.rating} style={{ fontSize: '14px' }} />
-                            <Text type="secondary" style={{ marginLeft: '4px', fontSize: '12px' }}>({book.rating})</Text>
-                          </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                           <Text type="secondary" style={{ fontSize: '12px' }}>已售{Math.floor(Math.random() * 1000 + 100)}本</Text>
                         </div>
                       </div>
@@ -452,106 +449,7 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* Testimonials Section */}
-      <div style={{ background: '#f8f9fa', padding: '60px 24px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <Title level={2} style={{ textAlign: 'center', marginBottom: '50px', fontSize: '2.5rem' }}>
-            用户评价
-          </Title>
-          <Row gutter={[24, 24]}>
-            <Col xs={24} md={8}>
-              <Card style={{ borderRadius: '12px', height: '100%' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <Rate disabled defaultValue={5} style={{ marginBottom: '16px' }} />
-                  <Text style={{ fontSize: '16px', lineHeight: '1.6', display: 'block', marginBottom: '20px' }}>
-                    "图书种类丰富，价格实惠，配送速度很快。客服态度也很好，推荐！"
-                  </Text>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ 
-                      width: '40px', 
-                      height: '40px', 
-                      borderRadius: '50%', 
-                      background: '#1890ff', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      color: 'white',
-                      marginRight: '12px'
-                    }}>
-                      张
-                    </div>
-                    <div>
-                      <Text strong>张同学</Text>
-                      <br />
-                      <Text type="secondary" style={{ fontSize: '12px' }}>计算机专业</Text>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </Col>
-            <Col xs={24} md={8}>
-              <Card style={{ borderRadius: '12px', height: '100%' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <Rate disabled defaultValue={5} style={{ marginBottom: '16px' }} />
-                  <Text style={{ fontSize: '16px', lineHeight: '1.6', display: 'block', marginBottom: '20px' }}>
-                    "正版保证，质量很好。网站界面简洁，购买流程很顺畅，会继续支持！"
-                  </Text>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ 
-                      width: '40px', 
-                      height: '40px', 
-                      borderRadius: '50%', 
-                      background: '#52c41a', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      color: 'white',
-                      marginRight: '12px'
-                    }}>
-                      李
-                    </div>
-                    <div>
-                      <Text strong>李老师</Text>
-                      <br />
-                      <Text type="secondary" style={{ fontSize: '12px' }}>高校教师</Text>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </Col>
-            <Col xs={24} md={8}>
-              <Card style={{ borderRadius: '12px', height: '100%' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <Rate disabled defaultValue={5} style={{ marginBottom: '16px' }} />
-                  <Text style={{ fontSize: '16px', lineHeight: '1.6', display: 'block', marginBottom: '20px' }}>
-                    "孩子很喜欢这里的童书，插图精美，内容丰富。家长放心，孩子开心！"
-                  </Text>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ 
-                      width: '40px', 
-                      height: '40px', 
-                      borderRadius: '50%', 
-                      background: '#eb2f96', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      color: 'white',
-                      marginRight: '12px'
-                    }}>
-                      王
-                    </div>
-                    <div>
-                      <Text strong>王女士</Text>
-                      <br />
-                      <Text type="secondary" style={{ fontSize: '12px' }}>家长</Text>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </Col>
-          </Row>
-        </div>
-      </div>
+
 
       {/* Call to Action Section */}
       <div style={{ 
@@ -568,45 +466,18 @@ const Home: React.FC = () => {
             加入我们，发现更多精彩图书，享受优质的阅读体验
           </Text>
           <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Button 
-              size="large" 
-              style={{ 
-                background: 'white', 
-                color: '#667eea', 
-                border: 'none',
-                borderRadius: '25px',
-                padding: '12px 30px',
-                height: 'auto',
-                fontSize: '16px',
-                fontWeight: 'bold'
-              }}
-            >
-              立即注册
-            </Button>
-            <Button 
-              size="large" 
-              style={{ 
-                background: 'transparent', 
-                color: 'white', 
-                border: '2px solid white',
-                borderRadius: '25px',
-                padding: '12px 30px',
-                height: 'auto',
-                fontSize: '16px'
-              }}
-            >
-              浏览图书
-            </Button>
+          
+            
           </div>
         </div>
       </div>
 
       {/* Books Section */}
-      <div style={{ background: '#f5f5f5', padding: '40px 24px' }}>
+      <div id="book-list" style={{ background: '#f5f5f5', padding: '40px 24px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
             <Title level={2}>
-              <FireOutlined style={{ color: '#ff4d4f' }} /> 精选图书
+              <FireOutlined style={{ color: '#ff4d4f' }} /> 热销图书
             </Title>
             <Space>
               <Select
@@ -664,16 +535,7 @@ const Home: React.FC = () => {
                         onClick={() => navigate(`/books/${book.id}`)}
                       >
                         {!book.coverUrl && <BookOutlined />}
-                        <div style={{
-                          position: 'absolute',
-                          top: '8px',
-                          right: '8px',
-                          background: 'rgba(255,255,255,0.9)',
-                          borderRadius: '12px',
-                          padding: '4px 8px'
-                        }}>
-                          <Rate disabled defaultValue={4} style={{ fontSize: '12px' }} />
-                        </div>
+
                       </div>
                     }
                   >
@@ -729,11 +591,7 @@ const Home: React.FC = () => {
                 pageSize={pageSize}
                 showSizeChanger
                 showQuickJumper
-                style={{
-                  '& .ant-pagination-item': {
-                    borderRadius: '8px'
-                  }
-                }}
+
                 showTotal={(total, range) => 
                   `第 ${range[0]}-${range[1]} 条，共 ${total} 条`
                 }

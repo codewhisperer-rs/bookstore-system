@@ -4,10 +4,12 @@ import com.bookstore.dto.CartDto;
 import com.bookstore.dto.CartItemDto;
 import com.bookstore.service.CartService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/cart")
+@RequestMapping("/cart")
+@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
 public class CartController {
 
     private final CartService cartService;

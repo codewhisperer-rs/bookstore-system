@@ -14,6 +14,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.security.core.Authentication;
+
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -54,9 +57,9 @@ public class CartServiceImpl implements CartService {
             cartItemRepository.save(cartItem);
         } else {
             CartItem cartItem = new CartItem();
-            cartItem.setCart(cart);
             cartItem.setBook(book);
             cartItem.setQuantity(quantity);
+            cartItem.setCart(cart);
             cart.getItems().add(cartItem);
             cartItemRepository.save(cartItem);
         }
@@ -67,8 +70,16 @@ public class CartServiceImpl implements CartService {
     @Override
     public CartDto removeFromCart(Long bookId) {
         Cart cart = getCurrentUserCart();
-        cart.getItems().removeIf(item -> item.getBook().getId().equals(bookId));
-        cartItemRepository.deleteByCartAndBookId(cart, bookId);
+        Optional<CartItem> cartItem = cart.getItems().stream()
+                .filter(item -> item.getBook().getId().equals(bookId))
+                .findFirst();
+
+        if (cartItem.isPresent()) {
+            CartItem itemToRemove = cartItem.get();
+            cart.getItems().remove(itemToRemove);
+            cartItemRepository.delete(itemToRemove);
+        }
+
         return mapCartToDto(cart);
     }
 
@@ -88,17 +99,31 @@ public class CartServiceImpl implements CartService {
     @Override
     public void clearCart() {
         Cart cart = getCurrentUserCart();
+        cartItemRepository.deleteAll(cart.getItems());
         cart.getItems().clear();
-        cartItemRepository.deleteByCart(cart);
+        cartRepository.save(cart);
     }
 
     private Cart getCurrentUserCart() {
-        // Always create a temporary cart for anonymous users
-        // This ensures cart functionality works without authentication
-        Cart tempCart = new Cart();
-        tempCart.setId(0L);
-        tempCart.setItems(new ArrayList<>()); // Initialize items list to avoid NullPointerException
-        return tempCart;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            // For anonymous users, return a temporary, non-persistent cart
+            Cart tempCart = new Cart();
+            tempCart.setId(0L); // Use a non-persistent ID
+            tempCart.setItems(new ArrayList<>());
+            return tempCart;
+        }
+
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+
+        return cartRepository.findByUser(user).orElseGet(() -> {
+            Cart newCart = new Cart();
+            newCart.setUser(user);
+            return cartRepository.save(newCart);
+        });
     }
 
     private CartDto mapCartToDto(Cart cart) {

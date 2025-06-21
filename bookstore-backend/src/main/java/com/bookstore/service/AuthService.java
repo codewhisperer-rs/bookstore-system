@@ -4,7 +4,9 @@ import com.bookstore.config.JwtUtil;
 import com.bookstore.dto.AuthResponse;
 import com.bookstore.dto.LoginRequest;
 import com.bookstore.dto.RegisterRequest;
+import com.bookstore.entity.Cart;
 import com.bookstore.entity.User;
+import com.bookstore.repository.CartRepository;
 import com.bookstore.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final CartRepository cartRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
@@ -42,6 +45,11 @@ public class AuthService {
         user.setIsActive(true);
 
         User savedUser = userRepository.save(user);
+        
+        // Create a new cart for the user
+        Cart cart = new Cart();
+        cart.setUser(savedUser);
+        cartRepository.save(cart);
 
         // Generate JWT token
         String token = jwtUtil.generateToken(savedUser.getUsername(), savedUser.getRole().name());
