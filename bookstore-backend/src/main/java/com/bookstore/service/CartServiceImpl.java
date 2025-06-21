@@ -54,14 +54,20 @@ public class CartServiceImpl implements CartService {
         if (existingItem.isPresent()) {
             CartItem cartItem = existingItem.get();
             cartItem.setQuantity(cartItem.getQuantity() + quantity);
-            cartItemRepository.save(cartItem);
+            // Only save to database if cart is persistent (not temporary)
+            if (cart.getId() != null && cart.getId() != 0L) {
+                cartItemRepository.save(cartItem);
+            }
         } else {
             CartItem cartItem = new CartItem();
             cartItem.setBook(book);
             cartItem.setQuantity(quantity);
             cartItem.setCart(cart);
             cart.getItems().add(cartItem);
-            cartItemRepository.save(cartItem);
+            // Only save to database if cart is persistent (not temporary)
+            if (cart.getId() != null && cart.getId() != 0L) {
+                cartItemRepository.save(cartItem);
+            }
         }
 
         return mapCartToDto(cart);
@@ -77,7 +83,10 @@ public class CartServiceImpl implements CartService {
         if (cartItem.isPresent()) {
             CartItem itemToRemove = cartItem.get();
             cart.getItems().remove(itemToRemove);
-            cartItemRepository.delete(itemToRemove);
+            // Only delete from database if cart is persistent (not temporary)
+            if (cart.getId() != null && cart.getId() != 0L) {
+                cartItemRepository.delete(itemToRemove);
+            }
         }
 
         return mapCartToDto(cart);
@@ -91,7 +100,10 @@ public class CartServiceImpl implements CartService {
                 .findFirst()
                 .ifPresent(item -> {
                     item.setQuantity(quantity);
-                    cartItemRepository.save(item);
+                    // Only save to database if cart is persistent (not temporary)
+                    if (cart.getId() != null && cart.getId() != 0L) {
+                        cartItemRepository.save(item);
+                    }
                 });
         return mapCartToDto(cart);
     }
@@ -99,9 +111,11 @@ public class CartServiceImpl implements CartService {
     @Override
     public void clearCart() {
         Cart cart = getCurrentUserCart();
-        cartItemRepository.deleteAll(cart.getItems());
-        cart.getItems().clear();
-        cartRepository.save(cart);
+        // Only delete from database if cart is persistent (not temporary)
+        if (cart.getId() != null && cart.getId() != 0L) {
+            cart.getItems().clear();
+            cartRepository.save(cart);
+        }
     }
 
     private Cart getCurrentUserCart() {

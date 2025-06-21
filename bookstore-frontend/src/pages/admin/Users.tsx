@@ -41,7 +41,7 @@ const AdminUsers: React.FC = () => {
       if (searchKeyword.trim()) {
         response = await userAPI.searchUsers(searchKeyword, currentPage - 1, pageSize);
       } else {
-        response = await userAPI.getAllUsers(currentPage - 1, pageSize);
+        response = await userAPI.getAllUsers(currentPage - 1, pageSize, 'id', 'asc');
       }
       setUsers(response);
     } catch (error) {
@@ -160,7 +160,7 @@ const AdminUsers: React.FC = () => {
       title: '操作',
       key: 'action',
       width: 120,
-      render: (_, record: User) => (
+      render: (_: any, record: User) => (
         <Space>
           <Popconfirm
             title="删除用户"

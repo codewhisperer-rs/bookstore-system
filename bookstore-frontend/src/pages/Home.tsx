@@ -10,12 +10,9 @@ import {
   Space, 
   Typography,
   App as AntdApp,
-  Spin,
-  Carousel,
-  Tabs,
-  Tag
+  Spin
 } from 'antd';
-import { SearchOutlined, ShoppingCartOutlined, FireOutlined, BookOutlined } from '@ant-design/icons';
+import { SearchOutlined, ShoppingCartOutlined, FireOutlined, BookOutlined, EditOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { bookAPI } from '../services/api';
 import { useCartStore } from '../store/cartStore';
@@ -25,16 +22,6 @@ import { Book, PageResponse } from '../types';
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 const { Option } = Select;
-const { TabPane } = Tabs;
-
-// Mock data for featured books
-const mockBooks: Book[] = [
-  { id: 1, title: 'JavaScript高级程序设计', author: 'Nicholas C. Zakas', price: 89.00, stock: 10, createdAt: '2024-01-01T00:00:00Z' },
-  { id: 2, title: 'Vue.js实战', author: '梁灏', price: 69.00, stock: 15, createdAt: '2024-01-02T00:00:00Z' },
-  { id: 3, title: 'React进阶之路', author: '徐超', price: 79.00, stock: 8, createdAt: '2024-01-03T00:00:00Z' },
-  { id: 4, title: 'Node.js开发指南', author: '郭家宝', price: 59.00, stock: 12, createdAt: '2024-01-04T00:00:00Z' }
-];
-
 const Home: React.FC = () => {
   const { message } = AntdApp.useApp();
   const [books, setBooks] = useState<PageResponse<Book> | null>(null);
@@ -44,9 +31,11 @@ const Home: React.FC = () => {
   const [pageSize, setPageSize] = useState(12);
   const [sortBy, setSortBy] = useState('id');
   const [sortDir, setSortDir] = useState('asc');
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [editingBook, setEditingBook] = useState<Book | null>(null);
 
   const { addToCart } = useCartStore();
-  const { isAuthenticated, hideRegister } = useAuthStore(); // Get hideRegister state
+  const { isAuthenticated, user, hideRegister } = useAuthStore(); // Get hideRegister state
   const navigate = useNavigate();
 
   const fetchBooks = async () => {
@@ -77,6 +66,12 @@ const Home: React.FC = () => {
   };
 
   const handleAddToCart = (book: Book) => {
+    if (!isAuthenticated) {
+      message.warning('请先登录后再添加到购物车');
+      navigate('/login');
+      return;
+    }
+    
     if (book.stock <= 0) {
       message.warning('该图书库存不足');
       return;
@@ -89,6 +84,28 @@ const Home: React.FC = () => {
   const handlePageChange = (page: number, size?: number) => {
     setCurrentPage(page);
     if (size) setPageSize(size);
+  };
+
+  const handleEdit = (book: Book) => {
+    setEditingBook(book);
+    setIsEditModalVisible(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditModalVisible(false);
+    setEditingBook(null);
+  };
+
+  const handleUpdateBook = async (values: any) => {
+    if (!editingBook) return;
+    try {
+      await bookAPI.updateBook(editingBook.id, values);
+      message.success('图书信息更新成功');
+      setIsEditModalVisible(false);
+      fetchBooks(); // Refresh the book list
+    } catch (error) {
+      message.error('更新图书信息失败');
+    }
   };
 
   return (
@@ -370,87 +387,6 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* Featured Books Section */}
-      <div style={{ background: 'white', padding: '60px 24px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <Title level={2} style={{ textAlign: 'center', marginBottom: '50px', fontSize: '2.5rem' }}>
-            精选图书
-          </Title>
-          <Row gutter={[24, 24]}>
-            {mockBooks.map((book) => (
-              <Col xs={24} sm={12} md={8} lg={6} key={book.id}>
-                <Card
-                  hoverable
-                  style={{ 
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                    transition: 'all 0.3s ease'
-                  }}
-                  cover={
-                    <div style={{ 
-                      height: '240px', 
-                      background: 'linear-gradient(45deg, #f0f0f0, #e8e8e8)', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      position: 'relative'
-                    }}>
-                      <BookOutlined style={{ fontSize: '64px', color: '#ccc' }} />
-                      <div style={{
-                        position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        background: '#ff4d4f',
-                        color: 'white',
-                        padding: '4px 8px',
-                        borderRadius: '12px',
-                        fontSize: '12px'
-                      }}>
-                        热销
-                      </div>
-                    </div>
-                  }
-                  actions={[
-                    <Button 
-                      type="primary" 
-                      icon={<ShoppingCartOutlined />}
-                      onClick={() => handleAddToCart(book)}
-                      disabled={book.stock <= 0}
-                      style={{
-                        background: book.stock <= 0 ? '#d9d9d9' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        border: 'none',
-                        borderRadius: '8px'
-                      }}
-                    >
-                      {book.stock <= 0 ? '缺货' : '加入购物车'}
-                    </Button>
-                  ]}
-                >
-                  <Card.Meta
-                    title={<Text strong style={{ fontSize: '16px' }}>{book.title}</Text>}
-                    description={
-                      <div>
-                        <Text type="secondary" style={{ fontSize: '14px' }}>{book.author}</Text>
-                        <br />
-                        <div style={{ margin: '12px 0' }}>
-                          <Text strong style={{ color: '#ff4d4f', fontSize: '20px' }}>¥{book.price}</Text>
-                          <Text delete style={{ marginLeft: '8px', color: '#999' }}>¥{(book.price * 1.3).toFixed(2)}</Text>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                          <Text type="secondary" style={{ fontSize: '12px' }}>已售{Math.floor(Math.random() * 1000 + 100)}本</Text>
-                        </div>
-                      </div>
-                    }
-                  />
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </div>
-      </div>
-
-
 
       {/* Call to Action Section */}
       <div style={{ 
@@ -565,20 +501,22 @@ const Home: React.FC = () => {
                         </Text>
                       </div>
                       
-                      <Button
-                        type="primary"
-                        icon={<ShoppingCartOutlined />}
-                        onClick={() => handleAddToCart(book)}
-                        disabled={book.stock <= 0}
-                        block
-                        style={{ 
-                          borderRadius: '8px',
-                          background: book.stock <= 0 ? '#d9d9d9' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                          border: 'none'
-                        }}
-                      >
-                        {book.stock <= 0 ? '缺货' : '加入购物车'}
-                      </Button>
+                      {isAuthenticated && (
+                        <Button
+                          type="primary"
+                          icon={<ShoppingCartOutlined />}
+                          onClick={() => handleAddToCart(book)}
+                          disabled={book.stock <= 0}
+                          block
+                          style={{ 
+                            borderRadius: '8px',
+                            background: book.stock <= 0 ? '#d9d9d9' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            border: 'none'
+                          }}
+                        >
+                          {book.stock <= 0 ? '缺货' : '加入购物车'}
+                        </Button>
+                      )}
                     </div>
                   </Card>
                 </Col>

@@ -31,12 +31,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         
         // Skip JWT processing for public endpoints
         String requestPath = request.getRequestURI();
+        String requestMethod = request.getMethod();
+        
         if (requestPath.startsWith("/api/auth/") || 
-            requestPath.startsWith("/api/books/") || 
             requestPath.startsWith("/swagger-ui/") || 
             requestPath.startsWith("/v3/api-docs/") || 
             requestPath.startsWith("/h2-console/") || 
-            requestPath.startsWith("/api/test/")) {
+            requestPath.startsWith("/api/test/") ||
+            (requestPath.startsWith("/api/books/") && "GET".equals(requestMethod))) {
             filterChain.doFilter(request, response);
             return;
         }

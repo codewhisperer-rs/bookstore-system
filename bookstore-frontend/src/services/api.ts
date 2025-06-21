@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { message } from 'antd';
-import { AuthResponse, LoginRequest, RegisterRequest } from '../types';
+import { AuthResponse, LoginRequest, RegisterRequest, BookRequest } from '../types';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -48,29 +48,16 @@ export const authAPI = {
 };
 
 export const bookAPI = {
-  getBooks: (page = 0, size = 10, sortBy = 'id', sortDir = 'asc') =>
+  getBooks: (page: number, size: number, sortBy: string, sortDir: string) => 
     api.get(`/books?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`).then(res => res.data),
-  
-  searchBooks: (keyword: string, page = 0, size = 10) =>
+  searchBooks: (keyword: string, page: number, size: number) => 
     api.get(`/books/search?keyword=${keyword}&page=${page}&size=${size}`).then(res => res.data),
-  
-  getBookById: (id: number) =>
-    api.get(`/books/${id}`).then(res => res.data),
-  
-  createBook: (data: any) =>
+  createBook: (data: BookRequest) => 
     api.post('/books', data).then(res => res.data),
-  
-  updateBook: (id: number, data: any) =>
+  updateBook: (id: number, data: BookRequest) => 
     api.put(`/books/${id}`, data).then(res => res.data),
-  
-  deleteBook: (id: number) =>
-    api.delete(`/books/${id}`),
-  
-  getAvailableBooks: (page = 0, size = 10) =>
-    api.get(`/books/available?page=${page}&size=${size}`).then(res => res.data),
-  
-  getLowStockBooks: (threshold = 10) =>
-    api.get(`/books/low-stock?threshold=${threshold}`).then(res => res.data),
+  deleteBook: (id: number) => 
+    api.delete(`/books/${id}`).then(res => res.data),
 };
 
 export const orderAPI = {
@@ -115,7 +102,7 @@ export const userAPI = {
     api.put(`/admin/users/${id}/role?role=${role}`).then(res => res.data),
 
   deleteUser: (id: number) =>
-    api.delete(`/admin/users/${id}`),
+    api.delete(`/admin/users/${id}`).then(res => res.data),
 };
 
 export default api;

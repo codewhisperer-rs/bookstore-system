@@ -40,8 +40,8 @@ const BookDetail: React.FC = () => {
   const fetchBookDetail = async (bookId: number) => {
     setLoading(true);
     try {
-      const response = await bookAPI.getBookById(bookId);
-      setBook(response);
+      const response = await bookAPI.getBooks(0, 1, 'id', 'asc');
+      setBook(response.content[0]);
     } catch (error) {
       message.error('获取图书详情失败');
       navigate('/');
@@ -51,6 +51,12 @@ const BookDetail: React.FC = () => {
   };
 
   const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      message.warning('请先登录后再添加到购物车');
+      navigate('/login');
+      return;
+    }
+    
     if (!book) return;
     
     if (book.stock < quantity) {
@@ -158,17 +164,24 @@ const BookDetail: React.FC = () => {
                     />
                   </div>
 
-                  <Space>
-                    <Button
-                      type="primary"
-                      size="large"
-                      icon={<ShoppingCartOutlined />}
-                      onClick={handleAddToCart}
-                      disabled={book.stock <= 0}
-                    >
-                      {book.stock <= 0 ? '缺货' : '加入购物车'}
-                    </Button>
-                  </Space>
+                  {isAuthenticated && (
+                    <Space>
+                      <Button
+                        type="primary"
+                        size="large"
+                        icon={<ShoppingCartOutlined />}
+                        onClick={handleAddToCart}
+                        disabled={book.stock <= 0}
+                      >
+                        {book.stock <= 0 ? '缺货' : '加入购物车'}
+                      </Button>
+                    </Space>
+                  )}
+                  {!isAuthenticated && (
+                    <div style={{ padding: '16px', background: '#f5f5f5', borderRadius: '8px', textAlign: 'center' }}>
+                      <Text type="secondary">请先登录后再购买</Text>
+                    </div>
+                  )}
                 </Space>
               </div>
             </Space>

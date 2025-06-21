@@ -42,7 +42,7 @@ const AdminBooks: React.FC = () => {
       if (searchKeyword.trim()) {
         response = await bookAPI.searchBooks(searchKeyword, currentPage - 1, pageSize);
       } else {
-        response = await bookAPI.getBooks(currentPage - 1, pageSize);
+        response = await bookAPI.getBooks(currentPage - 1, pageSize, 'id', 'asc');
       }
       setBooks(response);
     } catch (error) {

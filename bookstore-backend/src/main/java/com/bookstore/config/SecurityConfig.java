@@ -4,6 +4,7 @@ import com.bookstore.service.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -58,7 +59,10 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/books/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/books/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/books/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/books/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/books/**").hasRole("ADMIN")
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/api-docs/**", "/h2-console/**", "/actuator/**").permitAll()
                 .requestMatchers("/cart/**").authenticated()
                 .requestMatchers("/orders/**").authenticated()
