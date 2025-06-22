@@ -16,7 +16,8 @@ import {
   UserOutlined,
   DollarOutlined,
   PlusOutlined,
-  SettingOutlined
+  SettingOutlined,
+  CreditCardOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
@@ -57,6 +58,13 @@ const AdminDashboard: React.FC = () => {
       color: '#52c41a'
     },
     {
+      title: '支付管理',
+      description: '管理支付记录和退款',
+      icon: <CreditCardOutlined />,
+      link: '/admin/payments',
+      color: '#f5222d'
+    },
+    {
       title: '用户管理',
       description: '管理用户账户和权限',
       icon: <UserOutlined />,
@@ -79,7 +87,7 @@ const AdminDashboard: React.FC = () => {
     { id: 4, customer: '赵六', amount: 67.20, status: 'DELIVERED' },
   ];
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): string => {
     switch (status) {
       case 'PENDING': return 'orange';
       case 'PAID': return 'blue';
@@ -202,7 +210,7 @@ const AdminDashboard: React.FC = () => {
                   />
                   <div>
                     <div>¥{order.amount}</div>
-                    <Tag color={getStatusColor(order.status)} size="small">
+                    <Tag color={getStatusColor(order.status)} style={{ fontSize: '12px' }}>
                       {getStatusText(order.status)}
                     </Tag>
                   </div>

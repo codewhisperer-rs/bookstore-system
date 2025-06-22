@@ -47,4 +47,61 @@ public class CancelRequest {
     public enum CancelRequestStatus {
         PENDING, APPROVED, REJECTED
     }
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public CancelRequestStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(CancelRequestStatus status) {
+        this.status = status;
+    }
+
+    public String getAdminNote() {
+        return adminNote;
+    }
+
+    public void setAdminNote(String adminNote) {
+        this.adminNote = adminNote;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getProcessedAt() {
+        return processedAt;
+    }
+
+    public void setProcessedAt(LocalDateTime processedAt) {
+        this.processedAt = processedAt;
+    }
 }

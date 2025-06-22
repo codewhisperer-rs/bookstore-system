@@ -7,7 +7,8 @@ import {
   UserOutlined, 
   LogoutOutlined,
   DashboardOutlined,
-  BookOutlined
+  BookOutlined,
+  CreditCardOutlined
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
@@ -29,6 +30,11 @@ const Layout: React.FC = () => {
       key: 'orders',
       icon: <BookOutlined />,
       label: <Link to="/orders">我的订单</Link>,
+    },
+    {
+      key: 'payments',
+      icon: <CreditCardOutlined />,
+      label: <Link to="/payments">支付记录</Link>,
     },
     {
       key: 'logout',
@@ -144,7 +150,7 @@ const Layout: React.FC = () => {
         color: 'white',
         padding: '24px 0'
       }}>
-        图书销售系统 - 专业的在线图书销售平台 ©2024 Created with ❤️
+        图书销售系统 - 专业的在线图书销售平台 ©2025
       </Footer>
     </AntLayout>
   );

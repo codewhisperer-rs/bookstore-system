@@ -43,7 +43,7 @@ const Checkout: React.FC = () => {
         content: `订单号: ${response.id}`,
         onOk: () => {
           clearCart();
-          navigate('/orders');
+          navigate(`/payment/${response.id}`);
         }
       });
     } catch (error: any) {

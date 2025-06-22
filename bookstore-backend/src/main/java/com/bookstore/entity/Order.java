@@ -47,6 +47,9 @@ public class Order {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private CancelRequest cancelRequest;
 
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Payment payment;
+
     public enum OrderStatus {
         PENDING, PAID, SHIPPED, DELIVERED, CANCELLED
     }

@@ -17,10 +17,11 @@ import {
   Input,
   Popconfirm
 } from 'antd';
-import { CalendarOutlined, ShoppingOutlined, CloseOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { CalendarOutlined, ShoppingOutlined, CloseOutlined, ExclamationCircleOutlined, CreditCardOutlined } from '@ant-design/icons';
 import { orderAPI } from '../services/api';
 import { Order, PageResponse } from '../types';
 import CancelRequestInfo from '../components/CancelRequestInfo';
+import { useNavigate } from 'react-router-dom';
 
 const { TextArea } = Input;
 
@@ -36,6 +37,7 @@ const Orders: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [cancelReason, setCancelReason] = useState('');
   const [cancelLoading, setCancelLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchOrders();
@@ -198,6 +200,17 @@ const Orders: React.FC = () => {
                   <Text type="secondary">
                     {new Date(order.createdAt).toLocaleString()}
                   </Text>
+                  {order.status === 'PENDING' && (
+                    <Button 
+                      type="text" 
+                      size="small"
+                      icon={<CreditCardOutlined />}
+                      onClick={() => navigate(`/payment/${order.id}`)}
+                      style={{ color: '#52c41a' }}
+                    >
+                      去支付
+                    </Button>
+                  )}
                   {canCancelOrder(order) && (
                     <Popconfirm
                       title="确认取消订单？"

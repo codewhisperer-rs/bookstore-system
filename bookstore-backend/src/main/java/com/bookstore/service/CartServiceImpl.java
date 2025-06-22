@@ -1,5 +1,6 @@
 package com.bookstore.service;
 
+import com.bookstore.dto.BookDto;
 import com.bookstore.dto.CartDto;
 import com.bookstore.dto.CartItemDto;
 import com.bookstore.entity.Book;
@@ -37,8 +38,11 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CartDto getCart() {
         Cart cart = getCurrentUserCart();
+        // Initialize the items collection to avoid LazyInitializationException
+        cart.getItems().size();
         return mapCartToDto(cart);
     }
 
@@ -151,7 +155,19 @@ public class CartServiceImpl implements CartService {
         CartItemDto cartItemDto = new CartItemDto();
         cartItemDto.setBookId(cartItem.getBook().getId());
         cartItemDto.setQuantity(cartItem.getQuantity());
-        cartItemDto.setBook(cartItem.getBook());
+        cartItemDto.setBook(mapBookToDto(cartItem.getBook()));
         return cartItemDto;
+    }
+    
+    private BookDto mapBookToDto(Book book) {
+        BookDto bookDto = new BookDto();
+        bookDto.setId(book.getId());
+        bookDto.setTitle(book.getTitle());
+        bookDto.setAuthor(book.getAuthor());
+        bookDto.setPrice(book.getPrice());
+        bookDto.setStock(book.getStock());
+        bookDto.setDescription(book.getDescription());
+        bookDto.setCoverUrl(book.getCoverUrl());
+        return bookDto;
     }
 }

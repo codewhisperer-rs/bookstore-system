@@ -14,6 +14,9 @@ import AdminDashboard from './pages/admin/Dashboard';
 import AdminBooks from './pages/admin/Books';
 import AdminOrders from './pages/admin/Orders';
 import AdminUsers from './pages/admin/Users';
+import AdminPayments from './pages/admin/Payments';
+import Payment from './pages/Payment';
+import UserPayments from './pages/UserPayments';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const App: React.FC = () => {
@@ -64,6 +67,22 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="payment/:orderId"
+              element={
+                <ProtectedRoute>
+                  <Payment />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="payments"
+              element={
+                <ProtectedRoute>
+                  <UserPayments />
+                </ProtectedRoute>
+              }
+            />
             
             {/* Admin Routes */}
             <Route 
@@ -95,6 +114,14 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute adminOnly>
                   <AdminUsers />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="admin/payments" 
+              element={
+                <ProtectedRoute adminOnly>
+                  <AdminPayments />
                 </ProtectedRoute>
               } 
             />

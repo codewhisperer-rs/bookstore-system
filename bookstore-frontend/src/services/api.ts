@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { message } from 'antd';
-import { AuthResponse, LoginRequest, RegisterRequest, BookRequest } from '../types';
+import { AuthResponse, LoginRequest, RegisterRequest, BookRequest, Payment, PaymentRequest, PaymentResponse, PageResponse, PaymentStatus, RefundRequest, PaymentStatistics } from '../types';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -94,6 +94,58 @@ export const orderAPI = {
   // 获取待处理的取消申请
   getPendingCancelRequests: (page = 0, size = 10) =>
     api.get(`/orders/admin/cancel-requests?page=${page}&size=${size}`).then(res => res.data),
+};
+
+export const paymentAPI = {
+  // 创建支付
+  createPayment: (request: PaymentRequest) => 
+    api.post<PaymentResponse>('/payments', request),
+
+  // 获取支付信息
+  getPaymentById: (id: number) => 
+    api.get<PaymentResponse>(`/payments/${id}`),
+
+  getPaymentByOrderId: (orderId: number) => 
+    api.get<PaymentResponse>(`/payments/order/${orderId}`),
+
+  getUserPayments: (page: number = 0, size: number = 10) => 
+    api.get<PageResponse<Payment>>(`/payments/my-payments?page=${page}&size=${size}`),
+
+  // 管理员获取所有支付记录
+  getAllPayments: (page: number = 0, size: number = 10) => 
+    api.get<PageResponse<Payment>>(`/payments/admin/all?page=${page}&size=${size}`),
+
+  // 根据状态获取支付记录
+  getPaymentsByStatus: (status: PaymentStatus, page: number = 0, size: number = 10) => 
+    api.get<PageResponse<Payment>>(`/payments/admin/status/${status}?page=${page}&size=${size}`),
+
+  // 确认支付
+  confirmPayment: (id: number) => 
+    api.post(`/payments/${id}/confirm`),
+
+  // 取消支付
+  cancelPayment: (id: number) => 
+    api.post(`/payments/${id}/cancel`),
+
+  // 申请退款
+  requestRefund: (id: number, request: RefundRequest) => 
+    api.post(`/payments/${id}/refund/request`, request),
+
+  // 处理退款（管理员）
+  processRefund: (id: number, request: RefundRequest) => 
+    api.post(`/payments/${id}/refund/process`, request),
+
+  // 获取支付统计（管理员）
+  getPaymentStatistics: () => 
+    api.get<PaymentStatistics>('/payments/statistics'),
+
+  // 清理过期支付
+  cleanupExpiredPayments: () => 
+    api.post('/payments/cleanup'),
+
+  // 模拟支付网关回调
+  simulateCallback: (transactionId: string, success: boolean) => 
+    api.post(`/payments/callback/simulate`, { transactionId, success })
 };
 
 export const cartAPI = {

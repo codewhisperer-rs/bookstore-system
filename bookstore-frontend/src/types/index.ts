@@ -49,6 +49,9 @@ export interface CancelRequest {
   processedAt?: string;
 }
 
+// 导出支付相关类型
+export * from './payment';
+
 export interface AuthResponse {
   token: string;
   username: string;
@@ -96,8 +99,8 @@ export interface PageResponse<T> {
   content: T[];
   totalElements: number;
   totalPages: number;
-  size: number;
   number: number;
+  size: number;
   first: boolean;
   last: boolean;
 }
