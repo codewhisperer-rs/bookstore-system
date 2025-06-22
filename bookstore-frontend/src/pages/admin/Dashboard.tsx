@@ -8,7 +8,8 @@ import {
   Space,
   Button,
   List,
-  Tag
+  Tag,
+  message
 } from 'antd';
 import { 
   BookOutlined, 
@@ -20,6 +21,7 @@ import {
   CreditCardOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
+import { bookAPI, orderAPI, userAPI, paymentAPI } from '../../services/api';
 
 const { Title } = Typography;
 
@@ -30,16 +32,57 @@ const AdminDashboard: React.FC = () => {
     totalUsers: 0,
     totalRevenue: 0
   });
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for demonstration
+  // 获取真实统计数据
   useEffect(() => {
-    // In a real app, you would fetch these stats from the API
-    setStats({
-      totalBooks: 156,
-      totalOrders: 89,
-      totalUsers: 234,
-      totalRevenue: 12580.50
-    });
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // 获取图书总数
+        const booksResponse = await bookAPI.getBooks(0, 1, 'id', 'asc');
+        const totalBooks = booksResponse.totalElements;
+        
+        // 获取订单总数
+        const ordersResponse = await orderAPI.getAllOrders(0, 1);
+        const totalOrders = ordersResponse.totalElements;
+        
+        // 获取用户总数
+        const usersResponse = await userAPI.getAllUsers(0, 1);
+        const totalUsers = usersResponse.totalElements;
+        
+        // 获取支付统计信息（总收入）
+        const paymentStatsResponse = await paymentAPI.getPaymentStatistics();
+        const totalRevenue = paymentStatsResponse.data.totalPaymentAmount || 0;
+        
+        setStats({
+          totalBooks,
+          totalOrders,
+          totalUsers,
+          totalRevenue
+        });
+        
+        // 获取最近订单
+        const recentOrdersResponse = await orderAPI.getAllOrders(0, 4);
+        setRecentOrders(recentOrdersResponse.content);
+      } catch (error) {
+        console.error('获取仪表盘数据失败:', error);
+        message.error('获取统计数据失败，显示模拟数据');
+        // 加载失败时使用模拟数据
+        setStats({
+          totalBooks: 156,
+          totalOrders: 89,
+          totalUsers: 234,
+          totalRevenue: 12580.50
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
   const quickActions = [
@@ -80,19 +123,13 @@ const AdminDashboard: React.FC = () => {
     }
   ];
 
-  const recentOrders = [
-    { id: 1, customer: '张三', amount: 89.50, status: 'PENDING' },
-    { id: 2, customer: '李四', amount: 156.00, status: 'PAID' },
-    { id: 3, customer: '王五', amount: 234.80, status: 'SHIPPED' },
-    { id: 4, customer: '赵六', amount: 67.20, status: 'DELIVERED' },
-  ];
-
   const getStatusColor = (status: string): string => {
     switch (status) {
       case 'PENDING': return 'orange';
       case 'PAID': return 'blue';
       case 'SHIPPED': return 'cyan';
       case 'DELIVERED': return 'green';
+      case 'CANCELLED': return 'red';
       default: return 'default';
     }
   };
@@ -103,6 +140,7 @@ const AdminDashboard: React.FC = () => {
       case 'PAID': return '已支付';
       case 'SHIPPED': return '已发货';
       case 'DELIVERED': return '已送达';
+      case 'CANCELLED': return '已取消';
       default: return status;
     }
   };
@@ -116,7 +154,7 @@ const AdminDashboard: React.FC = () => {
       {/* 统计卡片 */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
+          <Card loading={loading}>
             <Statistic
               title="图书总数"
               value={stats.totalBooks}
@@ -126,7 +164,7 @@ const AdminDashboard: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
+          <Card loading={loading}>
             <Statistic
               title="订单总数"
               value={stats.totalOrders}
@@ -136,7 +174,7 @@ const AdminDashboard: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
+          <Card loading={loading}>
             <Statistic
               title="用户总数"
               value={stats.totalUsers}
@@ -146,7 +184,7 @@ const AdminDashboard: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
+          <Card loading={loading}>
             <Statistic
               title="总收入"
               value={stats.totalRevenue}
@@ -198,6 +236,7 @@ const AdminDashboard: React.FC = () => {
           <Card 
             title="最近订单" 
             extra={<Link to="/admin/orders">查看全部</Link>}
+            loading={loading}
           >
             <List
               size="small"
@@ -205,17 +244,18 @@ const AdminDashboard: React.FC = () => {
               renderItem={(order) => (
                 <List.Item>
                   <List.Item.Meta
-                    title={`订单 #${order.id}`}
-                    description={`客户: ${order.customer}`}
+                    title={<Link to={`/admin/orders/${order.id}`}>订单 #{order.id}</Link>}
+                    description={`客户: ${order.user?.username || '未知用户'}`}
                   />
                   <div>
-                    <div>¥{order.amount}</div>
+                    <div>¥{order.totalPrice?.toFixed(2)}</div>
                     <Tag color={getStatusColor(order.status)} style={{ fontSize: '12px' }}>
                       {getStatusText(order.status)}
                     </Tag>
                   </div>
                 </List.Item>
               )}
+              locale={{ emptyText: '暂无订单数据' }}
             />
           </Card>
         </Col>
